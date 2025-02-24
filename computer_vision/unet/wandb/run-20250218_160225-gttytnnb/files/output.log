@@ -1,0 +1,5 @@
+/var/folders/2s/c36gzps966l7g26p24rbth540000gn/T/ipykernel_9490/2095898862.py:54: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
+Epoch 1/1:   0%|          | 0/4580 [00:00<?, ?img/s]/opt/homebrew/lib/python3.11/site-packages/torch/utils/data/dataloader.py:682: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+Epoch 1/1:   0%|          | 0/4580 [00:12<?, ?img/s]

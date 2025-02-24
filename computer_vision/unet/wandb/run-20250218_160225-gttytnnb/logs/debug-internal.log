@@ -1,0 +1,8 @@
+{"time":"2025-02-18T16:02:25.659361+01:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/Users/mp/viscode-github/DLFromScratch/computer_vision/unet/wandb/run-20250218_160225-gttytnnb/logs/debug-core.log"}
+{"time":"2025-02-18T16:02:25.766109+01:00","level":"INFO","msg":"created new stream","id":"gttytnnb"}
+{"time":"2025-02-18T16:02:25.76617+01:00","level":"INFO","msg":"stream: started","id":"gttytnnb"}
+{"time":"2025-02-18T16:02:25.76619+01:00","level":"INFO","msg":"handler: started","stream_id":"gttytnnb"}
+{"time":"2025-02-18T16:02:25.766179+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"gttytnnb"}
+{"time":"2025-02-18T16:02:25.766207+01:00","level":"INFO","msg":"sender: started","stream_id":"gttytnnb"}
+{"time":"2025-02-18T16:02:26.317631+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T16:02:38.942984+01:00","level":"INFO","msg":"Pausing system monitor"}
