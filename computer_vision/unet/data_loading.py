@@ -1,7 +1,8 @@
 import logging
 import numpy as np
 import torch
-import cv2  # Import OpenCV
+from PIL import Image, ImageOps
+from functools import lru_cache
 from functools import partial
 from itertools import repeat
 from multiprocessing import Pool
@@ -10,42 +11,21 @@ from os.path import splitext, isfile, join
 from pathlib import Path
 from torch.utils.data import Dataset
 from tqdm import tqdm
-import torch.nn.functional as F
-from PIL import Image
 
 
-def load_image(filename, is_mask=False):
-    """Loads an image with OpenCV, handling both regular images and masks correctly."""
-    ext = Path(filename).suffix.lower()
-
+def load_image(filename):
+    ext = splitext(filename)[1]
     if ext == '.npy':
-        return np.load(filename)
+        return Image.fromarray(np.load(filename))
     elif ext in ['.pt', '.pth']:
-        return torch.load(filename).numpy()
-    elif ext == '.gif' and is_mask:
-        # Use Pillow to load the first frame of GIF masks
-        with Image.open(filename) as img:
-            img = img.convert("L")  # Convert to grayscale
-            return np.array(img)
+        return Image.fromarray(torch.load(filename).numpy())
     else:
-        # Use IMREAD_GRAYSCALE for masks, IMREAD_COLOR for images
-        flag = cv2.IMREAD_GRAYSCALE if is_mask else cv2.IMREAD_COLOR
-        img = cv2.imread(str(filename), flag)
-
-        if img is None:
-            raise FileNotFoundError(f"🚨 OpenCV failed to load: {filename}")
-
-        # Convert BGR to RGB for images (but not for grayscale masks)
-        if not is_mask:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        return img
+        return Image.open(filename)
 
 
 def unique_mask_values(idx, mask_dir, mask_suffix):
-    """Find unique values in a segmentation mask."""
     mask_file = list(mask_dir.glob(idx + mask_suffix + '.*'))[0]
-    mask = load_image(mask_file, is_mask=True)
+    mask = np.asarray(load_image(mask_file))
     if mask.ndim == 2:
         return np.unique(mask)
     elif mask.ndim == 3:
@@ -82,39 +62,14 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     @staticmethod
-    def pad_to_multiple_of_16(image):
-        """Pad images (RGB) and masks (grayscale) to ensure dimensions are multiples of 16."""
-        if len(image.shape) == 2:  # Grayscale mask (H, W)
-            h, w = image.shape
-            pad_h = (16 - h % 16) % 16
-            pad_w = (16 - w % 16) % 16
+    def preprocess(mask_values, pil_img, scale, is_mask):
 
-            # Pad grayscale mask with 0 (black)
-            padded_image = cv2.copyMakeBorder(image, 0, pad_h, 0, pad_w, cv2.BORDER_CONSTANT, value=0)
-
-        else:  # RGB image (H, W, C)
-            h, w, c = image.shape
-            pad_h = (16 - h % 16) % 16
-            pad_w = (16 - w % 16) % 16
-
-            # Pad RGB image with (0, 0, 0) (black)
-            padded_image = cv2.copyMakeBorder(image, 0, pad_h, 0, pad_w, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-
-        return padded_image
-
-
-    @staticmethod
-    def preprocess(mask_values, img, scale, is_mask):
-        """Resize, pad, and normalize images/masks."""
-
-        # Pad image to be a multiple of 16
-        img = BasicDataset.pad_to_multiple_of_16(img)
-        h, w = img.shape[:2]
+        #pil_img = BasicDataset.pad_to_multiple_of_16(pil_img)
+        w, h = pil_img.size
         newW, newH = int(scale * w), int(scale * h)
         assert newW > 0 and newH > 0, 'Scale is too small, resized images would have no pixel'
-
-        # Resize image using OpenCV
-        img = cv2.resize(img, (newW, newH), interpolation=cv2.INTER_NEAREST if is_mask else cv2.INTER_CUBIC)
+        pil_img = pil_img.resize((newW, newH), resample=Image.NEAREST if is_mask else Image.BICUBIC)
+        img = np.asarray(pil_img)
 
         if is_mask:
             mask = np.zeros((newH, newW), dtype=np.int64)
@@ -123,32 +78,55 @@ class BasicDataset(Dataset):
                     mask[img == v] = i
                 else:
                     mask[(img == v).all(-1)] = i
+
             return mask
 
         else:
-            # Convert HWC (OpenCV format) to CHW (PyTorch format)
-            img = img.transpose((2, 0, 1))
+            if img.ndim == 2:
+                img = img[np.newaxis, ...]
+            else:
+                img = img.transpose((2, 0, 1))
 
-            # Normalize if necessary
-            if img.max() > 1:
-                img = img / 255.0  # Convert to range [0,1]
+            if (img > 1).any():
+                img = img / 255.0
 
             return img
+        
+    @staticmethod
+    def pad_to_multiple_of_16(pil_image):
+        """Pad images (RGB) and masks (grayscale) to ensure dimensions are multiples of 16."""
+        if pil_image.mode == 'L':  # Grayscale mask
+            w, h = pil_image.size
+            pad_h = (16 - h % 16) % 16
+            pad_w = (16 - w % 16) % 16
+
+            # Pad grayscale mask with 0 (black)
+            padded_image = ImageOps.expand(pil_image, border=(0, 0, pad_w, pad_h), fill=0)
+
+        else:  # RGB image
+            w, h = pil_image.size
+            pad_h = (16 - h % 16) % 16
+            pad_w = (16 - w % 16) % 16
+
+            # Pad RGB image with (0, 0, 0) (black)
+            padded_image = ImageOps.expand(pil_image, border=(0, 0, pad_w, pad_h), fill=(0, 0, 0))
+
+        return padded_image
+        
+    
 
     def __getitem__(self, idx):
-        """Load an image and its corresponding mask, preprocess them, and return as tensors."""
         name = self.ids[idx]
         mask_file = list(self.mask_dir.glob(name + self.mask_suffix + '.*'))
         img_file = list(self.images_dir.glob(name + '.*'))
 
         assert len(img_file) == 1, f'Either no image or multiple images found for the ID {name}: {img_file}'
         assert len(mask_file) == 1, f'Either no mask or multiple masks found for the ID {name}: {mask_file}'
+        mask = load_image(mask_file[0])
+        img = load_image(img_file[0])
 
-        mask = load_image(mask_file[0], is_mask=True)
-        img = load_image(img_file[0], is_mask=False)
-
-        assert img.shape[:2] == mask.shape[:2], \
-            f'Image and mask {name} should be the same size, but are {img.shape[:2]} and {mask.shape[:2]}'
+        assert img.size == mask.size, \
+            f'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
 
         img = self.preprocess(self.mask_values, img, self.scale, is_mask=False)
         mask = self.preprocess(self.mask_values, mask, self.scale, is_mask=True)
