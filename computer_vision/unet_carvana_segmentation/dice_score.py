@@ -18,4 +18,4 @@ def dice_coeff(input: Tensor, target: Tensor, reduce_batch_first: bool = False, 
 
 def dice_loss(input: Tensor, target: Tensor, multiclass: bool = False):
     # Dice loss (objective to minimize) between 0 and 1
-    return 1 - dice_loss(input, target, reduce_batch_first=True)
+    return 1 - dice_coeff(input, target, reduce_batch_first=True)
