@@ -1,9 +1,0 @@
-2025-02-18 15:48:30,789 INFO    MainThread:7980 [wandb_init.py:setup_run_log_directory():637] Logging user logs to /Users/mp/viscode-github/DLFromScratch/computer_vision/unet/wandb/run-20250218_154830-93lmmc09/logs/debug.log
-2025-02-18 15:48:30,790 INFO    MainThread:7980 [wandb_init.py:setup_run_log_directory():638] Logging internal logs to /Users/mp/viscode-github/DLFromScratch/computer_vision/unet/wandb/run-20250218_154830-93lmmc09/logs/debug-internal.log
-2025-02-18 15:48:30,790 INFO    MainThread:7980 [wandb_init.py:init():756] calling init triggers
-2025-02-18 15:48:30,790 INFO    MainThread:7980 [wandb_init.py:init():761] wandb.init called with sweep_config: {}
-config: {'_wandb': {}}
-2025-02-18 15:48:30,790 INFO    MainThread:7980 [wandb_init.py:init():781] wandb.init() called when a run is still active
-2025-02-18 15:48:30,791 INFO    MainThread:7980 [wandb_run.py:_config_callback():1253] config_cb None None {'epochs': 1, 'batch_size': 1, 'learning_rate': 1e-05, 'val_percent': 0.1, 'save_checkpoint': True, 'img_scale': 0.5, 'amp': False}
-2025-02-18 15:48:38,215 INFO    MainThread:7980 [jupyter.py:save_ipynb():386] not saving jupyter notebook
-2025-02-18 15:48:38,215 INFO    MainThread:7980 [wandb_init.py:_pause_backend():554] pausing backend

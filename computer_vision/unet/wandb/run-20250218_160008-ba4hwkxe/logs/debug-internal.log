@@ -1,8 +1,0 @@
-{"time":"2025-02-18T16:00:08.840683+01:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/Users/mp/viscode-github/DLFromScratch/computer_vision/unet/wandb/run-20250218_160008-ba4hwkxe/logs/debug-core.log"}
-{"time":"2025-02-18T16:00:08.947699+01:00","level":"INFO","msg":"created new stream","id":"ba4hwkxe"}
-{"time":"2025-02-18T16:00:08.947744+01:00","level":"INFO","msg":"stream: started","id":"ba4hwkxe"}
-{"time":"2025-02-18T16:00:08.947771+01:00","level":"INFO","msg":"handler: started","stream_id":"ba4hwkxe"}
-{"time":"2025-02-18T16:00:08.94776+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"ba4hwkxe"}
-{"time":"2025-02-18T16:00:08.947798+01:00","level":"INFO","msg":"sender: started","stream_id":"ba4hwkxe"}
-{"time":"2025-02-18T16:00:09.499691+01:00","level":"INFO","msg":"Starting system monitor"}
-{"time":"2025-02-18T16:00:17.091766+01:00","level":"INFO","msg":"Pausing system monitor"}
